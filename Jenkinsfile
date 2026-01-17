@@ -22,7 +22,7 @@ pipeline {
             }
         }
 
-        stage('Terraform Init') {
+        stage('Terraform Operations') {
             steps {
                 withCredentials([
                     aws(
@@ -31,41 +31,16 @@ pipeline {
                         credentialsId: 'aws-jenkins-demo'
                     )
                 ]) {
+
                     sh 'terraform init'
-                }
-            }
-        }
 
-        stage('Terraform Plan / Apply') {
-            when {
-                expression { !params.DESTROY }
-            }
-            steps {
-                withCredentials([
-                    aws(
-                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                        credentialsId: 'aws-jenkins-demo'
-                    )
-                ]) {
-                    sh 'terraform apply -auto-approve'
-                }
-            }
-        }
-
-        stage('Terraform Destroy') {
-            when {
-                expression { params.DESTROY }
-            }
-            steps {
-                withCredentials([
-                    aws(
-                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                        credentialsId: 'aws-jenkins-demo'
-                    )
-                ]) {
-                    sh 'terraform destroy -auto-approve'
+                    script {
+                        if (params.DESTROY) {
+                            sh 'terraform destroy -auto-approve'
+                        } else {
+                            sh 'terraform apply -auto-approve'
+                        }
+                    }
                 }
             }
         }
