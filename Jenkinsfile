@@ -48,7 +48,7 @@ pipeline {
                     aws(
                         accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                        credentialsId: 'aaws-credentialss-jenkins-demo'
+                        credentialsId: 'aws-credentials'
                     )
                 ]) {
                     sh 'terraform apply -auto-approve'
@@ -66,5 +66,6 @@ pipeline {
         }
     }
 }
+
 
 
