@@ -3,8 +3,14 @@ pipeline {
 
     environment {
         AWS_DEFAULT_REGION = "us-east-1"
-        AWS_ACCESS_KEY_ID     = credentials('aws-credentials')
-        AWS_SECRET_ACCESS_KEY = credentials('aws-credentials')
+    }
+
+    parameters {
+        booleanParam(
+            name: 'DESTROY',
+            defaultValue: false,
+            description: 'Set TRUE to destroy Terraform infrastructure'
+        )
     }
 
     stages {
@@ -18,29 +24,59 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                sh 'terraform init'
+                withCredentials([
+                    aws(
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                        credentialsId: 'aws-jenkins-demo'
+                    )
+                ]) {
+                    sh 'terraform init'
+                }
             }
         }
 
-        stage('Terraform Plan') {
-            steps {
-                sh 'terraform plan'
+        stage('Terraform Plan / Apply') {
+            when {
+                expression { !params.DESTROY }
             }
-        }
-
-        stage('Terraform Apply') {
             steps {
-                sh 'terraform apply -auto-approve'
+                withCredentials([
+                    aws(
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                        credentialsId: 'aws-jenkins-demo'
+                    )
+                ]) {
+                    sh 'terraform apply -auto-approve'
+                }
             }
         }
 
         stage('Terraform Destroy') {
             when {
-                expression { params.DESTROY == true }
+                expression { params.DESTROY }
             }
             steps {
-                sh 'terraform destroy -auto-approve'
+                withCredentials([
+                    aws(
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                        credentialsId: 'aws-jenkins-demo'
+                    )
+                ]) {
+                    sh 'terraform destroy -auto-approve'
+                }
             }
+        }
+    }
+
+    post {
+        success {
+            echo "Terraform operation completed successfully 🎉"
+        }
+        failure {
+            echo "Terraform operation failed ❌"
         }
     }
 }
