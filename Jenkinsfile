@@ -20,7 +20,7 @@ pipeline {
                     aws(
                         accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                        credentialsId: 'aws-jenkins-demo'
+                        credentialsId: 'aws-credentials'
                     )
                 ]) {
                     sh 'terraform init'
@@ -34,7 +34,7 @@ pipeline {
                     aws(
                         accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                        credentialsId: 'aws-jenkins-demo'
+                        credentialsId: 'aws-credentials'
                     )
                 ]) {
                     sh 'terraform plan'
@@ -48,7 +48,7 @@ pipeline {
                     aws(
                         accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                        credentialsId: 'aws-jenkins-demo'
+                        credentialsId: 'aaws-credentialss-jenkins-demo'
                     )
                 ]) {
                     sh 'terraform apply -auto-approve'
@@ -66,4 +66,5 @@ pipeline {
         }
     }
 }
+
 
