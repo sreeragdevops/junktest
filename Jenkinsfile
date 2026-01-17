@@ -1,50 +1,66 @@
 pipeline {
     agent any
+
     parameters {
-        choice(name: 'TERRAFORM_ACTION', choices: ['apply', 'destroy', 'plan'], description: 'Select Terraform action to perform')
-        string(name: 'USER_NAME', defaultValue: 'Sreerag', description: 'Specify who is running the code')
+        choice(
+            name: 'TERRAFORM_ACTION',
+            choices: ['plan', 'apply', 'destroy'],
+            description: 'Select Terraform action to perform'
+        )
+        string(
+            name: 'USER_NAME',
+            defaultValue: 'Sreerag',
+            description: 'Who triggered the build'
+        )
     }
 
-
-    
     environment {
-        AWS_ACCESS_KEY_ID = credentials('aws-jenkins-demo')
+        AWS_DEFAULT_REGION = "us-east-1"
     }
+
     stages {
-        stage('Code checkout from Git') {
+
+        stage('Checkout Code') {
             steps {
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    extensions: [],
-                    userRemoteConfigs: [[
-                        credentialsId: 'aws-jenkins-demo',
-                        url: 'https://github.com/sreeragdevops/junktest.git'
-                    ]]
-                ])
+                git branch: 'main',
+                    url: 'https://github.com/sreeragdevops/junktest.git'
             }
         }
 
-        stage('terraform init') {
+        stage('Terraform Execution') {
             steps {
-                script {
-                    sh "terraform init"
+                withCredentials([
+                    aws(
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                        credentialsId: 'aws-jenkins-demo'
+                    )
+                ]) {
+
+                    sh 'terraform init'
+
+                    script {
+                        if (params.TERRAFORM_ACTION == 'plan') {
+                            sh 'terraform plan'
+                        }
+                        else if (params.TERRAFORM_ACTION == 'apply') {
+                            sh 'terraform apply -auto-approve'
+                        }
+                        else if (params.TERRAFORM_ACTION == 'destroy') {
+                            sh 'terraform destroy -auto-approve'
+                        }
+                    }
                 }
             }
         }
-        stage('terraform apply') {
-            steps {
-                script {
-                    sh "terraform apply --auto-approve"
-                }
-            }
+    }
+
+    post {
+        success {
+            echo "Terraform ${params.TERRAFORM_ACTION} completed by ${params.USER_NAME} 🎉"
         }
-        stage('terraform destroy') {
-            steps {
-                script {
-                    sh "terraform destroy --auto-approve"
-                }
-            }
+        failure {
+            echo "Terraform ${params.TERRAFORM_ACTION} failed ❌"
         }
     }
 }
