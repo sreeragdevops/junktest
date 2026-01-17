@@ -66,6 +66,21 @@ pipeline {
         }
     }
 }
+stage('Terraform Destroy') {
+    steps {
+        withCredentials([
+            aws(
+                accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                credentialsId: 'aws-jenkins-demo'
+            )
+        ]) {
+            sh 'terraform destroy -auto-approve'
+        }
+    }
+}
+
+
 
 
 
