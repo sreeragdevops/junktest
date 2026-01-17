@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        AWS_DEFAULT_REGION = "us-east-1"   // change if needed
+        AWS_DEFAULT_REGION = "us-east-1"
     }
 
     stages {
@@ -55,6 +55,26 @@ pipeline {
                 }
             }
         }
+
+        stage('Confirm Destroy') {
+            steps {
+                input message: '⚠️ Are you sure you want to DESTROY all Terraform resources?'
+            }
+        }
+
+        stage('Terraform Destroy') {
+            steps {
+                withCredentials([
+                    aws(
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                        credentialsId: 'aws-credentials'
+                    )
+                ]) {
+                    sh 'terraform destroy -auto-approve'
+                }
+            }
+        }
     }
 
     post {
@@ -66,21 +86,3 @@ pipeline {
         }
     }
 }
-stage('Terraform Destroy') {
-    steps {
-        withCredentials([
-            aws(
-                accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                credentialsId: 'aws-jenkins-demo'
-            )
-        ]) {
-            sh 'terraform destroy -auto-approve'
-        }
-    }
-}
-
-
-
-
-
