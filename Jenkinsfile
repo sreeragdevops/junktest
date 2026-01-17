@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         AWS_DEFAULT_REGION = "us-east-1"
+        AWS_ACCESS_KEY_ID     = credentials('aws-credentials')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-credentials')
     }
 
     stages {
@@ -16,73 +18,29 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                withCredentials([
-                    aws(
-                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                        credentialsId: 'aws-credentials'
-                    )
-                ]) {
-                    sh 'terraform init'
-                }
+                sh 'terraform init'
             }
         }
 
         stage('Terraform Plan') {
             steps {
-                withCredentials([
-                    aws(
-                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                        credentialsId: 'aws-credentials'
-                    )
-                ]) {
-                    sh 'terraform plan'
-                }
+                sh 'terraform plan'
             }
         }
 
         stage('Terraform Apply') {
             steps {
-                withCredentials([
-                    aws(
-                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                        credentialsId: 'aws-credentials'
-                    )
-                ]) {
-                    sh 'terraform apply -auto-approve'
-                }
-            }
-        }
-
-        stage('Confirm Destroy') {
-            steps {
-                input message: '⚠️ Are you sure you want to DESTROY all Terraform resources?'
+                sh 'terraform apply -auto-approve'
             }
         }
 
         stage('Terraform Destroy') {
-            steps {
-                withCredentials([
-                    aws(
-                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                        credentialsId: 'aws-credentials'
-                    )
-                ]) {
-                    sh 'terraform destroy -auto-approve'
-                }
+            when {
+                expression { params.DESTROY == true }
             }
-        }
-    }
-
-    post {
-        success {
-            echo "Terraform execution completed successfully 🎉"
-        }
-        failure {
-            echo "Terraform execution failed ❌"
+            steps {
+                sh 'terraform destroy -auto-approve'
+            }
         }
     }
 }
