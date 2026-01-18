@@ -29,13 +29,9 @@ pipeline {
 
         stage('Terraform Execution') {
             steps {
-                withCredentials([
-                    aws(
-                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                        credentialsId: 'aws-jenkins-demo'
-                    )
-                ]) {
+               withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+    // some block
+}
 
                     sh 'terraform init'
 
@@ -64,3 +60,4 @@ pipeline {
         }
     }
 }
+
